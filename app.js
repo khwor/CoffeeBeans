@@ -10,30 +10,35 @@ function today(){return new Date().toISOString().slice(0,10)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&','<':'<','>':'>','"':'"'}[c]))}
 function days(d){if(!d)return null;const n=Math.floor((Date.now()-new Date(d))/864e5);return n>=0?n:null}
 function ppList(c){return Array.isArray(c.puckPrep)?c.puckPrep:[]}
+function fmtDate(d){if(!d)return'';const p=d.split('-');return p.length===3?p[2]+'.'+p[1]+'.'+p[0].slice(2):d}
+function dots(r){if(!r)return'';let h='';for(let i=1;i<=5;i++){h+=`<span class="dot${r>=i?' on':(r>=i-0.5?' half':'')}"></span>`}return`<div class="dots">${h}</div>`}
 
 function render(){
   const g=document.getElementById('grid');
   g.innerHTML=S.slots.map((s,i)=>{
     const c=s.coffee;
-    if(!c)return`<div class="card empty" onclick="openEdit(${i})"><div class="bar" style="background:${s.color}"></div><div class="plus">+</div>Slot ${i+1}<br>leer</div>`;
-    const d=days(c.roastDate);
+    if(!c)return`<div class="card empty" onclick="openEdit(${i})"><div class="bar" style="background:${s.color}"></div><div class="plus">+</div></div>`;
     const ratio=(c.dose&&c.yield)?'1:'+(c.yield/c.dose).toFixed(1):'';
     const tags=(c.tags||'').split(',').map(t=>t.trim()).filter(Boolean).map(t=>`<span class="tag">${esc(t)}</span>`).join('');
     const info=[c.process,c.roastType].filter(Boolean).map(esc).join(' · ');
     const pp=ppList(c).map(esc).join(' · ');
+    const dy=(c.dose||c.yield)?`${c.dose||'?'}→${c.yield||'?'}g`:'';
+    const rd=fmtDate(c.roastDate);
     return`<div class="card" onclick="openEdit(${i})"><div class="bar" style="background:${s.color}"></div>
       <div class="name">${esc(c.name)||'–'}</div>
-      <div class="sub">${esc(c.roaster)}${c.roaster&&c.origin?' · ':''}${esc(c.origin)}</div>
+      ${c.roaster||c.origin?`<div class="sub">${esc(c.roaster)}${c.roaster&&c.origin?' · ':''}${esc(c.origin)}</div>`:''}
       ${info?`<div class="sub">${info}</div>`:''}
-      <div class="tags">${tags}</div>
-      <div class="sub">${esc(c.profile)||''}</div>
+      ${tags?`<div class="tags">${tags}</div>`:''}
+      ${c.profile?`<div class="sub">${esc(c.profile)}</div>`:''}
       ${pp?`<div class="sub">${pp}</div>`:''}
+      ${c.basket?`<div class="sub">Sieb: ${esc(c.basket)}</div>`:''}
       <div class="big"><div><b>${c.grind||'–'}</b><span>Mahlgrad</span></div><div><b>${c.time||'–'}s</b><span>Zeit</span></div></div>
-      <div class="meta"><span>${c.dose||'?'}→${c.yield||'?'}g ${ratio}</span><span>${c.temp?c.temp+'°':''}</span></div>
-      <div class="meta"><span>${c.rpm?c.rpm+' RPM':''}</span><span>${d!=null?d+' Tage':''}</span><span>${c.rating?'★ '+c.rating:''}</span></div>
+      ${dy||ratio||c.temp?`<div class="meta"><span>${dy}</span><span>${ratio}</span><span>${c.temp?c.temp+'°':''}</span></div>`:''}
+      ${c.rpm||rd?`<div class="meta"><span>${c.rpm?c.rpm+' RPM':''}</span><span class="date">${rd}</span></div>`:''}
+      ${dots(c.rating)}
     </div>`;
   }).join('');
-}
+    const dy=(c.dose||c.yield)?`${c.dose||'?'}→${c.yield||'?'}g`:'';
 
 function stepper(id,val,step,min,max){
   return`<div class="stepper"><button onclick="step('${id}',-${step},${min},${max})">−</button><input id="${id}" type="number" inputmode="decimal" step="${step}" value="${esc(val)}"><button onclick="step('${id}',${step},${min},${max})">+</button></div>`;
@@ -72,6 +77,7 @@ function openEdit(i,prefill){
     <div class="row"><div>${f('grind','Mahlgrad','num')}</div><div>${f('rpm','Drehzahl (RPM)','num')}</div></div>
     <div class="row"><div>${f('dose','Dosis (g)','num')}</div><div>${f('yield','Ertrag (g)','num')}</div></div>
     <div class="row"><div>${f('time','Zeit (s)','num')}</div><div>${f('temp','Temperatur (°C)','num')}</div></div>
+        ${sel('basket','Sieb',BASKET)}
     <label>Puck Prep</label><div class="chips" id="pp">${chips}</div>
     ${f('notes','Notizen','area')}
     <div class="actions">
@@ -100,8 +106,7 @@ function readForm(){
     roastDate:val('roastDate'),rating:num('rating'),profile:val('profile'),
     grind:num('grind'),rpm:num('rpm'),time:num('time'),dose:num('dose'),yield:num('yield'),temp:num('temp'),
     puckPrep:Array.from(document.querySelectorAll('#pp .chip.sel')).map(x=>x.textContent),
-    notes:val('notes'),updated:today()
-  };
+    basket:val('basket'),notes:val('notes'),updated:today()  };
 }
 function saveEdit(){
   const c=readForm();
@@ -118,7 +123,7 @@ function finish(){
   let h=S.history.find(x=>keyOf(x)===k);
   if(h){
     h.versions=h.versions||[];
-    h.versions.push({date:h.updated,grind:h.grind,rpm:h.rpm,time:h.time,dose:h.dose,yield:h.yield,temp:h.temp,profile:h.profile,roastDate:h.roastDate,puckPrep:h.puckPrep});
+    h.versions.push({date:h.updated,grind:h.grind,rpm:h.rpm,time:h.time,dose:h.dose,yield:h.yield,temp:h.temp,profile:h.profile,roastDate:h.roastDate,puckPrep:h.puckPrep,basket:h.basket});
     Object.assign(h,c,{versions:h.versions});
   }else{
     S.history.unshift(Object.assign({versions:[]},c));
