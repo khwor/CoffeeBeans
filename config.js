@@ -7,7 +7,7 @@ const COLORS=['#e63946','#f4a261','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59
 // Auswahllisten
 const PROCESSING=['Natural','Washed','Honey','Anaerob','Carbonic Maceration','Wet Hulled','Experimental'];
 const ROAST=['Espresso','Omni','Filter'];
-const PUCKPREP=['WDT','Shaker','Funnel','Leveler','Tamper','Puck Screen','Papierfilter unten','Papierfilter oben','RDT',];
+const PUCKPREP=['WDT','Shaker','Funnel','Leveler','Tamper','Puck Screen','Papierfilter unten','Papierfilter oben','RDT'];
 
 // Stepper: [Schrittweite, Minimum, Maximum]
 const STEP={
