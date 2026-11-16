@@ -69,9 +69,9 @@ function openEdit(i,prefill){
     ${f('tags','Geschmack (Komma getrennt)','text')}
     <div class="row"><div>${f('roastDate','Röstdatum','date')}</div><div>${f('rating','Bewertung','num')}</div></div>
     ${f('profile','DE1-Profil','text')}
-    <div class="row"><div>${f('grind','Mahlgrad','num')}</div><div>${f('time','Zeit (s)','num')}</div></div>
+    <div class="row"><div>${f('grind','Mahlgrad','num')}</div><div>${f('rpm','Drehzahl (RPM)','num')}</div></div>
     <div class="row"><div>${f('dose','Dosis (g)','num')}</div><div>${f('yield','Ertrag (g)','num')}</div></div>
-    <div class="row"><div>${f('temp','Temperatur (°C)','num')}</div><div>${f('rpm','Drehzahl (RPM)','num')}</div></div>
+    <div class="row"><div>${f('time','Zeit (s)','num')}</div><div>${f('temp','Temperatur (°C)','num')}</div></div>
     <label>Puck Prep</label><div class="chips" id="pp">${chips}</div>
     ${f('notes','Notizen','area')}
     <div class="actions">
