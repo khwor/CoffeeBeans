@@ -23,18 +23,25 @@ button:active{opacity:.6}
 button.primary{background:#e8a33d;color:#111;font-weight:700}
 button.danger{background:#7a2a2a}
 #grid{height:calc(var(--screen-height) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 8px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:8px}
-.selection-card{position:relative;width:100%;min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;padding:16px 12px;text-align:left;background:#1a1a1d;border:1px solid #2a2a2e;border-radius:16px;overflow:hidden}
+.selection-card{position:relative;width:100%;min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;padding:16px 12px;text-align:left;background:#1a1a1d;border:1px solid #2a2a2e;border-radius:16px;overflow:hidden;cursor:pointer}
 .selection-card .bar{position:absolute;top:0;left:0;right:0;height:8px}
 /* Übersicht Titel Schriftgrösse*/
 .selection-card .title{font-size:26px;font-weight:700;line-height:1.2}
+.selection-open{width:100%;border:0;background:transparent;color:#f2f2f2;font:inherit;text-align:left;padding:0;cursor:pointer}
+.selection-open.title{font-size:26px;font-weight:700;line-height:1.2}
 .selection-card .summary{font-size:16px;color:#9a9a9f}
 .selection-metrics{width:100%;display:flex;flex-direction:column;align-items:stretch;gap:4px;margin-top:auto;text-align:center}
+.selection-field{width:auto;border:0;border-radius:4px;background:transparent;color:inherit;font:inherit;padding:2px;cursor:pointer}
+.selection-doses,.selection-times{width:100%;display:flex;justify-content:space-between;align-items:center}
+.selection-doses .selection-dose,.selection-times .selection-time{flex:1}
+.selection-doses .selection-dose:first-child,.selection-times .selection-time:first-child{text-align:left}
+.selection-doses .selection-dose:last-child,.selection-times .selection-time:last-child{text-align:right}
 .selection-dose{font-size:14px;color:#9a9a9f}
-.selection-grind{min-height:76px;background:#232327;border-radius:10px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.selection-grind{min-height:76px;background:#232327;border-radius:10px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer}
 /* Übersicht Schriftgrösse Grind*/
-.selection-grind strong{font-size:40px;line-height:1.1;color:#e8a33d}
-.selection-grind span{margin-top:3px;font-size:13px;color:#bdbdc2}
-.selection-label{font-size:12px;color:#9a9a9f;text-transform:uppercase}
+.selection-grind-value{width:100%;flex:1;font-size:40px;font-weight:700;line-height:1.1;color:#e8a33d}
+.selection-rpm{width:100%;margin-top:3px;font-size:13px;color:#bdbdc2}
+.selection-time{font-size:12px;color:#9a9a9f}
 .detail-nav{display:flex;justify-content:space-between;gap:8px;margin:0 0 12px}
 .detail-nav button{flex:1}
 .detail-card{min-height:calc(var(--screen-height) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 64px);padding-bottom:12px}
@@ -48,6 +55,7 @@ button.danger{background:#7a2a2a}
 .card .sub{font-size:11px;color:#9a9a9f}
 .card .profile{text-align:center}
 .card .coffee-meta{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 6px}
+.detail-card .coffee-meta{flex-direction:column;align-items:flex-start;gap:2px}
 .tags{display:flex;flex-wrap:wrap;gap:3px;margin:2px 0}
 .tag{font-size:10px;background:#2a2a2e;border-radius:8px;padding:2px 6px}
 .metric-group{margin-top:auto;display:flex;flex-direction:column;gap:0}
@@ -122,7 +130,7 @@ const KEY='kaffee-v1';
 const COLORS=['#e63946','#f4a261','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e84393','#ecf0f1','#2d3436'];
 
 // Auswahllisten
-const PROCESSING=['Natural','Washed','Honey','Anaerob','Carbonic Maceration','Wet Hulled','Experimental'];
+const PROCESSING=['Natural','Washed','Honey','Anaerob','Carbonic Maceration','Wet Hulled','Experimental','Tabi Natural'];
 const ROAST=['Espresso','Omni','Filter'];
 const PUCKPREP=['RDT','Shaker Funnel','Puck Screen','Leveler','WDT','Tamper','Papierfilter unten','Papierfilter oben'];
 const BASKET=['15g VST','18g VST','20g VST','IMS'];
@@ -160,21 +168,27 @@ function render(){
   const g=document.getElementById('grid');
   g.innerHTML=S.slots.map((s,i)=>{
     const c=s.coffee;
-    const summary=c?[c.roaster,c.origin].filter(Boolean).map(esc).join(' · '):'Antippen zum Hinzufügen';
+    const summary=c?[c.roaster,c.origin,c.roastType,c.process].filter(Boolean).map(esc).join(' · '):'Antippen zum Hinzufügen';
     const metrics=c?`<div class="selection-metrics">
-      <div class="selection-dose">In: ${c.dose!=null?esc(c.dose)+'g':'–'}</div>
-      <div class="selection-grind">
-        <strong>${c.grind!=null?esc(c.grind):'–'}</strong>
-        <span>${c.rpm!=null?esc(c.rpm)+' RPM':'RPM –'}</span>
+      <div class="selection-doses">
+        <button class="selection-field selection-dose" aria-label="Dose In bearbeiten" onclick="openQuickEdit(event,${i},'dose')">In: ${c.dose!=null?esc(c.dose)+'g':'–'}</button>
+        <button class="selection-field selection-dose" aria-label="Dose Out bearbeiten" onclick="openQuickEdit(event,${i},'yield')">Out: ${c.yield!=null?esc(c.yield)+'g':'–'}</button>
       </div>
-      <div class="selection-label">Mahlgrad</div>
+      <div class="selection-grind" onclick="openQuickEdit(event,${i},'grind')">
+        <button class="selection-field selection-grind-value" aria-label="Mahlgrad bearbeiten" onclick="openQuickEdit(event,${i},'grind')">${c.grind!=null?esc(c.grind):'–'}</button>
+        <button class="selection-field selection-rpm" aria-label="RPM bearbeiten" onclick="openQuickEdit(event,${i},'rpm')">${c.rpm!=null?esc(c.rpm)+' RPM':'RPM –'}</button>
+      </div>
+      <div class="selection-times">
+        <button class="selection-field selection-time" aria-label="Soll-Zeit bearbeiten" onclick="openQuickEdit(event,${i},'time')">${c.time!=null?esc(c.time)+'s':'–'}</button>
+        <button class="selection-field selection-time" aria-label="Ist-Zeit bearbeiten" onclick="openQuickEdit(event,${i},'actualTime')">${c.actualTime!=null?esc(c.actualTime)+'s':'–'}</button>
+      </div>
     </div>`:'';
-    return`<button class="selection-card" onclick="openCoffee(${i})">
+    return`<article class="selection-card" onclick="openCoffee(${i})">
       <span class="bar" style="background:${s.color}"></span>
-      <span class="title">${c?esc(c.name)||'Kaffee':'Kaffee hinzufügen'}</span>
+      <button class="selection-open title" onclick="event.stopPropagation();openCoffee(${i})">${c?esc(c.name)||'Kaffee':'Kaffee hinzufügen'}</button>
       ${summary?`<span class="summary">${summary}</span>`:''}
       ${metrics}
-    </button>`;
+    </article>`;
   }).join('');
   if(currentPage==='detail')renderDetail();
 }
@@ -205,14 +219,16 @@ function renderDetail(){
     </section>`;
     return;
   }
-  const coffeeInfo=[c.roaster,c.roastType,c.process,c.origin].filter(Boolean).map(esc).join(' · ');
+  const originProcess=[c.origin,c.process].filter(Boolean).map(esc).join(' · ');
+  const roasterType=[c.roaster,c.roastType].filter(Boolean).map(esc).join(' · ');
   const tags=(c.tags||'').split(',').map(t=>t.trim()).filter(Boolean).map(t=>`<span class="tag">${esc(t)}</span>`).join('');
   const puckPrep=ppList(c).map(esc).join(' · ');
   const temperature=c.temp!=null?c.temp+' °C':'';
   detail.innerHTML=`<article class="card detail-card">
     <div class="bar" style="background:${s.color}"></div>
     <div class="name">${esc(c.name)||'–'}</div>
-    ${coffeeInfo||c.roastDate?`<div class="coffee-meta">${coffeeInfo?`<span class="sub">${coffeeInfo}</span>`:''}${c.roastDate?`<span class="date">${fmtDate(c.roastDate)}</span>`:''}</div>`:''}
+    ${originProcess||roasterType?`<div class="coffee-meta">${originProcess?`<span class="sub">${originProcess}</span>`:''}${roasterType?`<span class="sub">${roasterType}</span>`:''}</div>`:''}
+    ${c.roastDate?`<div class="date">${fmtDate(c.roastDate)}</div>`:''}
     ${tags?`<div class="tags">${tags}</div>`:''}
     ${puckPrep?`<div class="sub">${puckPrep}</div>`:''}
     ${c.basket?`<div class="sub">Sieb: ${esc(c.basket)}</div>`:''}
@@ -241,11 +257,10 @@ function openQuickEdit(event,i,kind){
   event.stopPropagation();
   edit=i;
   const c=S.slots[i].coffee;
-  const fields=kind==='grind'
-    ?`<label>Mahlgrad</label>${stepper('quick_grind',c.grind!=null?c.grind:'',...STEP.grind)}<label>Drehzahl (RPM)</label>${stepper('quick_rpm',c.rpm!=null?c.rpm:'',...STEP.rpm)}`
-    :`<label>Soll-Zeit (s)</label>${stepper('quick_time',c.time!=null?c.time:'',...STEP.time)}<label>Ist-Zeit (s)</label>${stepper('quick_actualTime',c.actualTime!=null?c.actualTime:'',...STEP.actualTime)}`;
-  const title=kind==='grind'?'Mahlgrad und RPM':'Zeit';
-  document.getElementById('panel').innerHTML=`<h2>${title}</h2>${fields}
+  const labels={grind:'Mahlgrad',rpm:'Drehzahl (RPM)',dose:'Dose In (g)',yield:'Dose Out (g)',time:'Soll-Zeit (s)',actualTime:'Ist-Zeit (s)'};
+  const label=labels[kind];
+  const fields=`<label>${label}</label>${stepper('quick_'+kind,c[kind]!=null?c[kind]:'',...STEP[kind])}`;
+  document.getElementById('panel').innerHTML=`<h2>${label}</h2>${fields}
     <div class="actions">
       <button class="primary" onclick="saveQuickEdit('${kind}')">Speichern</button>
       <button onclick="closeSheet()">Abbrechen</button>
@@ -289,8 +304,8 @@ function openEdit(i,prefill){
     <h2>${c.name?esc(c.name):'Kaffee hinzufügen'}</h2>
     <label>Deckelfarbe</label><div class="colors" id="colors">${sw}</div>
     ${f('name','Name','text')}
+    <div class="row"><div>${f('origin','Herkunft','text')}</div><div>${sel('process','Processing',PROCESSING)}</div></div>
     <div class="row"><div>${f('roaster','Rösterei','text')}</div><div>${sel('roastType','Röstart',ROAST)}</div></div>
-    <div class="row"><div>${sel('process','Processing',PROCESSING)}</div><div>${f('origin','Herkunft','text')}</div></div>
     ${f('tags','Geschmack (Komma getrennt)','text')}
     ${f('roastDate','Röstdatum','date')}
     ${f('profile','DE1-Profil','profile')}
@@ -338,17 +353,8 @@ function saveEdit(){
 }
 function saveQuickEdit(kind){
   const c=S.slots[edit].coffee;
-  const read=id=>{
-    const value=document.getElementById('quick_'+id).value;
-    return value===''?null:parseFloat(value);
-  };
-  if(kind==='grind'){
-    c.grind=read('grind');
-    c.rpm=read('rpm');
-  }else{
-    c.time=read('time');
-    c.actualTime=read('actualTime');
-  }
+  const value=document.getElementById('quick_'+kind).value;
+  c[kind]=value===''?null:parseFloat(value);
   c.updated=today();
   save();render();closeSheet();
 }
@@ -376,10 +382,10 @@ function openHist(pick){
   const slot=pick===true?edit:null;
   const list=S.history.map((h,i)=>{
     const v=(h.versions||[]).slice().reverse().map(x=>`${x.date||'?'}: Mahlgrad ${x.grind||'?'}${x.rpm?' @ '+x.rpm+' RPM':''}, Soll ${x.time||'?'}s${x.actualTime!=null?', Ist '+x.actualTime+'s':''}, ${x.dose||'?'}→${x.yield||'?'}g${x.profile?', '+x.profile:''}`).join('\n');
-    const info=[h.process,h.roastType].filter(Boolean).join(' · ');
+    const info=[h.origin,h.process,h.roaster,h.roastType].filter(Boolean).map(esc).join(' · ');
     const pp=ppList(h).join(', ');
-    return`<div class="hitem"><div class="t">${esc(h.name)} <span style="font-weight:400;color:#9a9a9f">${esc(h.roaster)}</span></div>
-      <div class="s">${esc(h.origin)}${info?' · '+esc(info):''}${h.tags?' · '+esc(h.tags):''}
+    return`<div class="hitem"><div class="t">${esc(h.name)}</div>
+      <div class="s">${info}${h.tags?' · '+esc(h.tags):''}
 Zuletzt (${h.updated||'?'}): Mahlgrad ${h.grind||'?'}${h.rpm?' @ '+h.rpm+' RPM':''}, Soll ${h.time||'?'}s${h.actualTime!=null?', Ist '+h.actualTime+'s':''}, ${h.dose||'?'}→${h.yield||'?'}g${h.temp?', '+h.temp+'°':''}${h.profile?'\nProfil: '+esc(h.profile):''}${pp?'\nPuck Prep: '+esc(pp):''}${v?'\n\nFrühere Einstellungen:\n'+esc(v):''}</div>
       <div class="a">
         <button class="primary" onclick="loadHist(${i})">In Slot laden</button>
