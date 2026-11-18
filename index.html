@@ -23,25 +23,30 @@ button:active{opacity:.6}
 button.primary{background:#e8a33d;color:#111;font-weight:700}
 button.danger{background:#7a2a2a}
 #grid{height:calc(var(--screen-height) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 8px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:8px}
-.selection-card{position:relative;width:100%;min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;padding:16px 12px;text-align:left;background:#1a1a1d;border:1px solid #2a2a2e;border-radius:16px;overflow:hidden;cursor:pointer}
+/* Abstand Sekunden zu unterem Rand */
+.selection-card{position:relative;width:100%;min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;padding:16px 12px 12px;text-align:left;background:#1a1a1d;border:1px solid #2a2a2e;border-radius:16px;overflow:hidden;cursor:pointer}
 .selection-card .bar{position:absolute;top:0;left:0;right:0;height:8px}
 /* Übersicht Titel Schriftgrösse*/
 .selection-card .title{font-size:26px;font-weight:700;line-height:1.2}
 .selection-open{width:100%;border:0;background:transparent;color:#f2f2f2;font:inherit;text-align:left;padding:0;cursor:pointer}
 .selection-open.title{font-size:26px;font-weight:700;line-height:1.2}
-.selection-card .summary{font-size:16px;color:#9a9a9f}
+/* Übersicht Schriftgrösse Infos (Hersteller, Herkunft, Roast, Process)*/
+.selection-card .summary{font-size:14px;color:#9a9a9f}
+.selection-profile{width:100%;margin:auto 0;text-align:center;font-size:12px;color:#9a9a9f}
 .selection-metrics{width:100%;display:flex;flex-direction:column;align-items:stretch;gap:4px;margin-top:auto;text-align:center}
 .selection-field{width:auto;border:0;border-radius:4px;background:transparent;color:inherit;font:inherit;padding:2px;cursor:pointer}
 .selection-doses,.selection-times{width:100%;display:flex;justify-content:space-between;align-items:center}
 .selection-doses .selection-dose,.selection-times .selection-time{flex:1}
 .selection-doses .selection-dose:first-child,.selection-times .selection-time:first-child{text-align:left}
 .selection-doses .selection-dose:last-child,.selection-times .selection-time:last-child{text-align:right}
+/* Übersicht Schriftgrösse Dose*/
 .selection-dose{font-size:14px;color:#9a9a9f}
 .selection-grind{min-height:76px;background:#232327;border-radius:10px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer}
 /* Übersicht Schriftgrösse Grind*/
 .selection-grind-value{width:100%;flex:1;font-size:40px;font-weight:700;line-height:1.1;color:#e8a33d}
 .selection-rpm{width:100%;margin-top:3px;font-size:13px;color:#bdbdc2}
-.selection-time{font-size:12px;color:#9a9a9f}
+/* Übersicht Schriftgrösse Sekunden*/
+.selection-time{font-size:14px;color:#9a9a9f}
 .detail-nav{display:flex;justify-content:space-between;gap:8px;margin:0 0 12px}
 .detail-nav button{flex:1}
 .detail-card{min-height:calc(var(--screen-height) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 64px);padding-bottom:12px}
@@ -169,6 +174,7 @@ function render(){
   g.innerHTML=S.slots.map((s,i)=>{
     const c=s.coffee;
     const summary=c?[c.roaster,c.origin,c.roastType,c.process].filter(Boolean).map(esc).join(' · '):'Antippen zum Hinzufügen';
+    const profile=c&&c.profile?`<div class="selection-profile">${esc(c.profile)}</div>`:'';
     const metrics=c?`<div class="selection-metrics">
       <div class="selection-doses">
         <button class="selection-field selection-dose" aria-label="Dose In bearbeiten" onclick="openQuickEdit(event,${i},'dose')">In: ${c.dose!=null?esc(c.dose)+'g':'–'}</button>
@@ -187,6 +193,7 @@ function render(){
       <span class="bar" style="background:${s.color}"></span>
       <button class="selection-open title" onclick="event.stopPropagation();openCoffee(${i})">${c?esc(c.name)||'Kaffee':'Kaffee hinzufügen'}</button>
       ${summary?`<span class="summary">${summary}</span>`:''}
+      ${profile}
       ${metrics}
     </article>`;
   }).join('');
