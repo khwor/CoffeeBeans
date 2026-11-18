@@ -32,7 +32,7 @@ button.danger{background:#7a2a2a}
 .selection-open.title{font-size:26px;font-weight:700;line-height:1.2}
 /* Übersicht Schriftgrösse Infos (Hersteller, Herkunft, Roast, Process)*/
 .selection-card .summary{font-size:14px;color:#9a9a9f}
-.selection-profile{width:100%;margin:auto 0;text-align:center;font-size:12px;color:#9a9a9f}
+.selection-profile{width:100%;text-align:center;font-size:12px;color:#9a9a9f}
 .selection-metrics{width:100%;display:flex;flex-direction:column;align-items:stretch;gap:4px;margin-top:auto;text-align:center}
 .selection-field{width:auto;border:0;border-radius:4px;background:transparent;color:inherit;font:inherit;padding:2px;cursor:pointer}
 .selection-doses,.selection-times{width:100%;display:flex;justify-content:space-between;align-items:center}
@@ -176,6 +176,7 @@ function render(){
     const summary=c?[c.roaster,c.origin,c.roastType,c.process].filter(Boolean).map(esc).join(' · '):'Antippen zum Hinzufügen';
     const profile=c&&c.profile?`<div class="selection-profile">${esc(c.profile)}</div>`:'';
     const metrics=c?`<div class="selection-metrics">
+      ${profile}
       <div class="selection-doses">
         <button class="selection-field selection-dose" aria-label="Dose In bearbeiten" onclick="openQuickEdit(event,${i},'dose')">In: ${c.dose!=null?esc(c.dose)+'g':'–'}</button>
         <button class="selection-field selection-dose" aria-label="Dose Out bearbeiten" onclick="openQuickEdit(event,${i},'yield')">Out: ${c.yield!=null?esc(c.yield)+'g':'–'}</button>
@@ -193,7 +194,6 @@ function render(){
       <span class="bar" style="background:${s.color}"></span>
       <button class="selection-open title" onclick="event.stopPropagation();openCoffee(${i})">${c?esc(c.name)||'Kaffee':'Kaffee hinzufügen'}</button>
       ${summary?`<span class="summary">${summary}</span>`:''}
-      ${profile}
       ${metrics}
     </article>`;
   }).join('');
